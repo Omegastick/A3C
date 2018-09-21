@@ -49,7 +49,7 @@ def train(
     episode_reward = 0
     episode_length = 0
     episode_values = []
-    hidden_state = torch.zeros(1, 256)
+    hidden_state = (torch.zeros(1, 256), torch.zeros(1, 256))
 
     # make agent
     model = ActorCritic(env.observation_space.shape, env.action_space.n,
@@ -84,7 +84,7 @@ def train(
 
             if done:
                 state = env.reset()
-                hidden_state = torch.zeros(1, 256)
+                hidden_state = (torch.zeros(1, 256), torch.zeros(1, 256))
 
             state = torch.from_numpy(state)
 
@@ -156,4 +156,4 @@ def train(
 
         optimizer.step()
 
-        hidden_state = hidden_state.data
+        hidden_state = (hidden_state[0].data, hidden_state[1].data)

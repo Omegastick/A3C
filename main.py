@@ -25,7 +25,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--max_timesteps',
-        default=10000000,
+        default=5000000,
         type=int,
         help="How many total timesteps to run between all environments"
     )
@@ -80,7 +80,7 @@ def main():
     )
     parser.add_argument(
         '--no_of_workers',
-        default=10,
+        default=16,
         type=int,
         help="Number of parallel processes to run"
     )
@@ -139,27 +139,27 @@ def main():
         hyperparams.max_timesteps))
     monitor_process.start()
     processes.append(monitor_process)
-    # for i in range(hyperparams.no_of_workers):
-    #     process = Process(target=train, args=(
-    #         shared_model,
-    #         directory,
-    #         hyperparams,
-    #         frame_counter,
-    #         optimizer,
-    #         monitor.queue,
-    #         i))
-    #     process.start()
-    #     processes.append(process)
+    for i in range(hyperparams.no_of_workers):
+        process = Process(target=train, args=(
+            shared_model,
+            directory,
+            hyperparams,
+            frame_counter,
+            optimizer,
+            monitor.queue,
+            i))
+        process.start()
+        processes.append(process)
 
-    train(
-        shared_model=shared_model,
-        directory=directory,
-        hyperparams=hyperparams,
-        frame_counter=frame_counter,
-        optimizer=optimizer,
-        monitor_queue=monitor.queue,
-        process_number=0
-    )
+    # train(
+    #     shared_model=shared_model,
+    #     directory=directory,
+    #     hyperparams=hyperparams,
+    #     frame_counter=frame_counter,
+    #     optimizer=optimizer,
+    #     monitor_queue=monitor.queue,
+    #     process_number=0
+    # )
 
     for process in processes:
         process.join()

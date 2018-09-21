@@ -44,7 +44,7 @@ class Flatten(nn.Module):
     Module for flattening an n-dimensional matrix down to a 2-dimensional one.
     """
 
-    def forward(self, x) -> torch.Tensor:  # pylint:disable=arguments-differ
+    def forward(self, x) -> torch.Tensor:
         x = x.view(x.shape[0], -1)
         return x
 
@@ -61,7 +61,7 @@ class NatureCNN(nn.Module):
         self.conv_2 = nn.Conv2d(32, 64, 4, 2)
         self.conv_3 = nn.Conv2d(64, 64, 3, 1)
 
-    def forward(self, x) -> torch.Tensor:  # pylint:disable=arguments-differ
+    def forward(self, x) -> torch.Tensor:
         x = x.view(-1, *self.input_shape).float()
         x = self.conv_1(x)
         x = F.relu(x)
@@ -84,7 +84,7 @@ class MultiLayerPerceptron(nn.Module):
         self.layer_2 = nn.Linear(128, 256)
         self.layer_3 = nn.Linear(256, 256)
 
-    def forward(self, x) -> torch.Tensor:  # pylint:disable=arguments-differ
+    def forward(self, x) -> torch.Tensor:
         x = x.view(-1, *self.input_shape).float()
         x = self.layer_1(x)
         x = F.relu(x)
@@ -118,7 +118,7 @@ class ActorCritic(nn.Module):
         feature_size = self.flatten(
             self.features(torch.zeros(1, *input_shape))).size(1)
 
-        self.gru = nn.GRUCell(feature_size, 256)
+        self.lstm = nn.LSTMCell(feature_size, 256)
 
         self.actor = nn.Linear(256, action_space)
         self.critic = nn.Linear(256, 1)
@@ -132,14 +132,15 @@ class ActorCritic(nn.Module):
             self.critic.weight.data, 1.0)
         self.critic.bias.data.fill_(0)
 
-    def forward(self, x, hx) -> torch.Tensor:  # pylint:disable=arguments-differ
+    def forward(self, x, hidden_state) -> torch.Tensor:
+        hx, cx = hidden_state
         x = self.features(x)
         x = self.flatten(x)
 
-        hx = self.gru(x, hx)
+        hx, cx = self.lstm(x, (hx, cx))
         x = hx
 
         actor = self.actor(x)
         critic = self.critic(x)
 
-        return actor, critic, hx
+        return actor, critic, (hx, cx)
