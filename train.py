@@ -2,6 +2,7 @@
 methods for training an a3c agent
 """
 
+import time
 from typing import NamedTuple
 import numpy as np
 import torch
@@ -49,6 +50,7 @@ def train(
     episode_reward = 0
     episode_length = 0
     episode_values = []
+    episode_start_time = time.time()
     hidden_state = (torch.zeros(1, 256), torch.zeros(1, 256))
 
     # make agent
@@ -89,10 +91,12 @@ def train(
             state = torch.from_numpy(state)
 
             if done:
+                now = time.time()
                 episode_data = EpisodeData(
                     score=episode_reward,
                     length=episode_length,
-                    average_value=np.mean(episode_values)
+                    average_value=np.mean(episode_values),
+                    time_taken=now - episode_start_time
                 )
                 monitor_queue.put(episode_data)
                 with frame_counter.get_lock():
@@ -100,6 +104,7 @@ def train(
                 episode_reward = 0
                 episode_length = 0
                 episode_values = []
+                episode_start_time = now
                 break
 
         # Get value of final timestep

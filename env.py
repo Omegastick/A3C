@@ -18,7 +18,7 @@ def create_environment(
     env = gym.make(env_name)
     if monitor:
         env = gym.wrappers.Monitor(env, run_directory, force=True,
-                                   video_callable=lambda x: x % 50 == 0)
+                                   video_callable=lambda x: x % 10 == 0)
     if atari:
         if 'NoFrameskip' in env_name:
             env = atari_wrappers.MaxAndSkipEnv(env)

@@ -131,7 +131,7 @@ def main():
     optimizer.share_memory()
 
     # Monitor
-    monitor = Monitor(directory)
+    monitor = Monitor(directory, hyperparams)
 
     processes = []
     monitor_process = Process(target=monitor.monitor, args=(

@@ -2,12 +2,15 @@
 Monitor training progress.
 """
 
+import os
 from typing import NamedTuple
 import numpy as np
 from torch.multiprocessing import Lock, Queue, Value
 from bokeh.plotting import figure
 from bokeh.io import output_file, save
 from bokeh.layouts import row
+
+from hyperparams import HyperParams
 
 
 class EpisodeData(NamedTuple):
@@ -17,6 +20,7 @@ class EpisodeData(NamedTuple):
     length: int
     score: int
     average_value: float
+    time_taken: float
 
 
 class Monitor(object):
@@ -24,7 +28,7 @@ class Monitor(object):
     A class for monitoring training progress.
     """
 
-    def __init__(self, log_directory):
+    def __init__(self, log_directory: str, hyperparams: HyperParams):
         self.lock = Lock()
 
         self.episode_lengths = []
@@ -37,6 +41,12 @@ class Monitor(object):
 
         self.log_directory = log_directory
 
+        if not os.path.exists(log_directory + '/hyperparams.txt'):
+            with open(log_directory + '/hyperparams.txt', 'w') as param_file:
+                for parameter in hyperparams._fields:
+                    value = getattr(hyperparams, parameter)
+                    print(f'{parameter}: {value}', file=param_file)
+
     def record(self, episode_data: EpisodeData):
         """
         Record an episode and print some information about it.
@@ -46,12 +56,15 @@ class Monitor(object):
             self.episode_scores.append(episode_data.score)
             self.episode_values.append(episode_data.average_value)
 
+            fps = episode_data.length / episode_data.time_taken
+
             print(f"Episode {len(self.episode_scores)} - "
                   f"Frame {self.frame_counter.value} - "
                   f"Length: {episode_data.length} - "
-                  f"Score: {episode_data.score}")
+                  f"Score: {episode_data.score} - "
+                  f"FPS: {fps:.2f}")
 
-            if len(self.episode_scores) % 100 == 0:
+            if len(self.episode_scores) % 10 == 0:
                 score_plot = figure(title="Score")
                 score_plot.line(range(len(self.episode_scores)),
                                 self.episode_scores)
